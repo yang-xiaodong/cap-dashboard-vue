@@ -40,22 +40,26 @@
           >
         </b-form>
         <b-btn-toolbar class="mt-4">
-          <b-button size="sm" variant="dark">
+          <b-button
+            size="sm"
+            variant="dark"
+            @click="requeue"
+            :disabled="!selectedItems.length"
+          >
             <b-icon icon="arrow-repeat" aria-hidden="true"></b-icon>
             Requeue</b-button
           >
           <div class="pagination">
             <span style="font-size: 14px"> Page Size:</span>
             <b-button-group class="ml-2">
-              <b-btn
+              <b-button
                 variant="outline-secondary"
                 size="sm"
-                active-class="active"
-                active
-                v-for="size in pageSize"
+                v-for="size in pageOptions"
+                :class="{ active: perPage == size }"
                 @click="pageSizeChange(size)"
                 :key="size"
-                >{{ size }}</b-btn
+                >{{ size }}</b-button
               >
             </b-button-group>
           </div>
@@ -72,15 +76,16 @@
           select-mode="range"
         >
           <template #head(checkbox)="">
-            <b-checkbox
-              @click.stop="toggleSelected"
-              v-model="allSelected"
-            ></b-checkbox>
+            <b-form-checkbox
+              @change="selectAll"
+              v-model="isSelectedAll"
+            ></b-form-checkbox>
           </template>
 
-          <template #cell(checkbox)="row">
+          <template #cell(checkbox)="data">
             <b-form-checkbox
-              @change="onPreviewClick(row.item, row.index, $event.target)"
+              v-model="data.item.selected"
+              @change="select(data.item)"
             >
             </b-form-checkbox>
           </template>
@@ -110,12 +115,14 @@
           :per-page="perPage"
           class="capPagination"
           aria-controls="datatable"
+          @change="pagination()"
         ></b-pagination>
       </b-col>
     </b-row>
-    <b-modal size="lg"
+    <b-modal
+      size="lg"
       :id="infoModal.id"
-      :title="infoModal.title"
+      :title="'Id: ' + infoModal.title"
       ok-only
       @hide="resetInfoModal"
     >
@@ -135,7 +142,6 @@ export default {
   data: () => {
     return {
       active: "Succeeded",
-      dataList: [],
       subMens: [
         {
           variant: "secondary",
@@ -148,19 +154,17 @@ export default {
           num: 1,
         },
       ],
-      pageSize: [10, 20, 50, 100, 500],
-      checkedItems: [],
+      pageOptions: [10, 20, 50, 100, 500],
+      selectedItems: [],
       tableValues: [],
-      allSelected: false,
+      isSelectedAll: false,
       currentPage: 1,
-      perPage: 20,
+      perPage: 10,
       rows: 0,
-      rquestParams: {
-        pageIndex: 1,
-        pageSize: 10,
-      },
+      name: "",
+      content: "",
       fields: [
-        { key: "checkbox", label: "All" },
+        { key: "checkbox", label: "" },
         { key: "id", label: "Id / Name" },
         { key: "retries", label: "Retries" },
         {
@@ -188,82 +192,99 @@ export default {
     };
   },
   mounted() {
-    requestFunc(
-      "get",
-      "/cap/published/" + this.active
-    )((res) => {
-      res.then((data) => {
-        this.items = data.result;
-        this.rows = data.count;
-      });
-    });
-
-    console.log(this.items);
+    this.fetchData();
   },
-  // watch: {
-  //   checkedItems(a) {
-  //     this.allSelected = this.tableValues.length === a.length ? true : false;
-  //   },
-  //   perPage(a, b) {
-  //     if (a !== b) {
-  //       this.clearSelected();
-  //     }
-  //   },
-  //   currentPage(a, b) {
-  //     if (a !== b) {
-  //       this.clearSelected();
-  //     }
-  //   },
-  //   filter(a, b) {
-  //     if (a !== b) {
-  //       this.clearSelected();
-  //     }
-  //   },
-  //   async(a, b) {
-  //     if (a !== b) {
-  //       this.clearSelected();
-  //     }
-  //   },
-  // },
+  computed: {},
+
+  watch: {
+    currentPage: function () {
+      this.fetchData();
+    },
+  },
   methods: {
+    fetchData() {
+      requestFunc(
+        "get",
+        "/cap/published/" +
+          this.active +
+          "?name=" +
+          this.name +
+          "&content=" +
+          this.content +
+          "&from=" +
+          this.currentPage +
+          "&count=" +
+          this.perPage
+      )((res) => {
+        res.then((data) => {
+          this.items = data.result;
+          this.rows = data.count;
+        });
+      });
+
+      console.log(this.items);
+    },
+    selectAll(checked) {
+      if (checked) {
+        this.selectedItems = [
+          ...this.items.map((item) => {
+            item.selected = true;
+            return item;
+          }),
+        ];
+        this.items = [...this.selectedItems];
+      } else {
+        this.selectedItems = [];
+        this.items = this.items.map((item) => {
+          item.selected = false;
+          return item;
+        });
+      }
+    },
     details(item) {
       alert(JSON.stringify(item));
     },
-    toggleSelected() {
-      this.checkedItems = this.allSelected ? this.tableValues : [];
+    select(item) {
+      const { id } = item;
+      if (!this.selectedItems.some((item) => item.id == id)) {
+        this.selectedItems.push(item);
+      } else {
+        this.selectedItems = this.selectedItems.filter((item) => item.id != id);
+      }
+      this.isSelectedAll = this.selectedItems.length == this.items.length;
     },
     clearSelected() {
       this.allSelected = false;
-      this.checkedItems = [];
+      this.selectedItems = [];
     },
     info(item, button) {
       this.infoModal.title = item.id.toString();
       this.infoModal.content = item.content;
       this.$root.$emit("bv::show::modal", this.infoModal.id, button);
     },
-    onPreviewClick(value, index, item) {
-      console.log(value);
-      console.log(index);
-      console.log(item);
-      console.log(this.items);
-      // value == value of checkbox (ie. true or false, or whatever is stored in v-model)
-      // index == visual index of row (i.e. the index of the row wrt the displayed rows)
-      // item == the clicked row item data
-    },
     resetInfoModal() {
       this.infoModal.title = "";
       this.infoModal.content = "";
     },
     pageSizeChange: function (size) {
-      this.rquestParams.pageSize = size;
-      this.fetch();
+      this.perPage = size;
+      this.fetchData();
     },
 
     search: function () {},
-    fetch: function () {
-      // url(this.params).then((res) => {
-      //   this.dataList = res.data;
-      // });
+    requeue: function () {
+      requestFunc(
+        "post",
+        "cap/published/requeue",
+        this.selectedItems.map((item) => item.id)
+      )(() => {
+        this.items = this.items.map((item) => {
+          item.selected = false;
+          return item;
+        });
+        this.selectedItems = [];
+        this.isSelectedAll = false;
+      });
     },
   },
 };

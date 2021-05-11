@@ -15,7 +15,6 @@ var requestCache = {};
 function requestIntercept( ) {
   // 过滤code不正确的的例子
   request.interceptors.response.use(function(res) {
-
       switch( Number(res.status) ) {
         // post,put,patch,delete 成功
         case 201:
@@ -27,7 +26,7 @@ function requestIntercept( ) {
           return res.data
       }
     }, function() {
-      let code, message
+      let code, message;
 
       // 如果有返回数据
       return Promise.reject({
