@@ -21,9 +21,13 @@ const routes = [
         redirect: '/published/succeeded'
     },
     {
-        path: '/Received/:status',
+        path: '/received/:status',
         name: 'Received',
         component: () => import('../pages/Received.vue')
+    },
+    {
+        path: '/received',
+        redirect: '/received/succeeded'
     },
     {
         path: '/subscriber',

@@ -5,7 +5,7 @@
         <b-list-group>
           <router-link class="list-group-item text-left list-group-item-secondary list-group-item-action" v-for="menu of subMens" :key="menu.text" active-class="active" :to="menu.name">
             {{ menu.text }}
-            <b-badge :variant="menu.variant" class="float-right" pill>{{ menu.num }}
+            <b-badge :variant="menu.variant" class="float-right" pill> {{ myMertric[menu.num] }}
             </b-badge>
           </router-link>
         </b-list-group>
@@ -45,11 +45,11 @@
             </b-form-checkbox>
           </template>
 
-          <template #cell(id)="row">
-            <b-link @click="info(row.item, $event.target)">
-              {{ row.item.id }}
+          <template #cell(id)="data">
+            <b-link @click="info(data.item, $event.target)">
+              {{ data.item.id }}
             </b-link>
-            {{ row.item.name }}
+            {{ data.item.name }}
           </template>
 
           <template #table-busy>
@@ -64,14 +64,12 @@
       </b-col>
     </b-row>
     <b-modal size="lg" :id="infoModal.id" :title="'Id: ' + infoModal.title" ok-only>
-      <vue-json-pretty showSelectController :key="infoModal.id" :data="JSON.parse(infoModal.content.trim())">
-      </vue-json-pretty>
+      <vue-json-pretty showSelectController :key="infoModal.id" :data="JSON.parse(infoModal.content.trim())" />
     </b-modal>
   </div>
 </template>
 <script>
 import { requestFunc } from "../api/request";
-
 const formDataTpl = {
   currentPage: 1,
   perPage: 10,
@@ -80,25 +78,22 @@ const formDataTpl = {
 };
 export default {
   props: {
-    status: {
-      type: String,
-      default: "succeeded",
-    },
+    status: {},
   },
-  data: () => {
+  data() {
     return {
       subMens: [
         {
           variant: "secondary",
           text: "Succeeded",
+          num: 'publishedSucceeded',
           name: "/published/succeeded",
-          num: 11,
         },
         {
           variant: "danger",
           text: "Failed",
           name: "/published/failed",
-          num: 1,
+          num: 'publishedFailed',
         },
       ],
       pageOptions: [10, 20, 50, 100, 500],
@@ -135,13 +130,14 @@ export default {
       },
     };
   },
-  mounted() {
-    console.log(this.$route);
-    this.fetchData();
-    console.log(this.status);
+  computed: {
+    myMertric() {
+      return this.$store.getters.getMetric;
+    }
   },
-  computed: {},
-
+  mounted() {
+    this.fetchData();
+  },
   watch: {
     status: function () {
       this.fetchData();
@@ -151,12 +147,6 @@ export default {
     },
   },
   methods: {
-    switchData() {
-      this.fetchData().then(() => {
-        this.clear();
-        this.formData = { ...formDataTpl };
-      });
-    },
     fetchData() {
       return requestFunc("get", `/cap/published/${this.status}`, {
         params: { ...this.formData },
@@ -188,9 +178,6 @@ export default {
         });
       }
     },
-    details(item) {
-      alert(JSON.stringify(item));
-    },
     select(item) {
       const { id } = item;
       if (!this.selectedItems.some((item) => item.id == id)) {
@@ -208,10 +195,6 @@ export default {
       this.infoModal.title = item.id.toString();
       this.infoModal.content = item.content;
       this.$root.$emit("bv::show::modal", this.infoModal.id, button);
-    },
-    resetInfoModal() {
-      this.infoModal.title = "";
-      this.infoModal.content = "";
     },
     pageSizeChange: function (size) {
       this.formData.perPage = size;
@@ -246,33 +229,6 @@ export default {
       this.isSelectedAll = false;
     },
   },
-};
-
-Date.prototype.format = function (fmt) {
-  var o = {
-    "M+": this.getMonth() + 1, //月份
-    "d+": this.getDate(), //日
-    "h+": this.getHours(), //小时
-    "m+": this.getMinutes(), //分
-    "s+": this.getSeconds(), //秒
-    "q+": Math.floor((this.getMonth() + 3) / 3), //季度
-    S: this.getMilliseconds(), //毫秒
-  };
-  if (/(y+)/.test(fmt)) {
-    fmt = fmt.replace(
-      RegExp.$1,
-      (this.getFullYear() + "").substr(4 - RegExp.$1.length)
-    );
-  }
-  for (var k in o) {
-    if (new RegExp("(" + k + ")").test(fmt)) {
-      fmt = fmt.replace(
-        RegExp.$1,
-        RegExp.$1.length == 1 ? o[k] : ("00" + o[k]).substr(("" + o[k]).length)
-      );
-    }
-  }
-  return fmt;
 };
 </script>
 

@@ -7,8 +7,8 @@
 
         <b-collapse id="nav-collapse" is-nav>
           <b-navbar-nav>
-            <b-nav-item v-for="route in routes" :to="route.path" :key="route.name" active-class="active">
-              {{ route.name }}
+            <b-nav-item v-for="menu in menus" :to="menu.path" :key="menu.name" active-class="active">
+              {{ menu.name }}
             </b-nav-item>
           </b-navbar-nav>
         </b-collapse>
@@ -33,7 +33,7 @@ export default {
   data() {
     return {
       brandTitle: "CAP Dashbaord",
-      routes: [
+      menus: [
         { name: "Published", path: "/published" },
         { name: "Received", path: "/received" },
         { name: "Subscriber", path: "/subscriber" },
