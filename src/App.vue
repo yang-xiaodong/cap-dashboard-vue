@@ -1,7 +1,6 @@
 <template>
   <div id="app">
     <navigation />
-    
     <b-container class="mt-4">
       <router-view />
     </b-container>
@@ -26,5 +25,4 @@ export default {
   text-align: center;
   color: #2c3e50;
 }
-
 </style>

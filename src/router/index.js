@@ -13,22 +13,27 @@ const routes = [
     {
         path: '/published/:status',
         name: 'Published',
-        component: () => import(/* webpackChunkName: "Published" */ '../pages/Published.vue')
+        props: true,
+        component: () => import('../pages/Published.vue')
+    },
+    {
+        path: '/published',
+        redirect: '/published/succeeded'
     },
     {
         path: '/Received/:status',
         name: 'Received',
-        component: () => import(/* webpackChunkName: "Received" */ '../pages/Received.vue')
+        component: () => import('../pages/Received.vue')
     },
     {
         path: '/subscriber',
         name: 'Subscriber',
-        component: () => import(/* webpackChunkName: "Subscriber" */ '../pages/Subscriber.vue')
+        component: () => import('../pages/Subscriber.vue')
     },
     {
         path: '/nodes',
         name: 'Nodes',
-        component: () => import(/* webpackChunkName: "Nodes" */ '../pages/Nodes.vue')
+        component: () => import('../pages/Nodes.vue')
     }
 ]
 
