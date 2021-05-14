@@ -1,20 +1,23 @@
 <template>
   <div id="app">
-    <navigation />
+    <Navigation />
     <b-container class="mt-4">
       <router-view />
     </b-container>
+    <Footer />
   </div>
 </template>
 
 <script>
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 import axios from "axios";
 
 export default {
   name: "App",
   components: {
     Navigation,
+    Footer
   },
   data() {
     return { timer: '' }
@@ -71,5 +74,12 @@ Date.prototype.format = function (fmt) {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
+}
+
+.page-line {
+  text-align: left;
+  line-height: 38px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid #eee;
 }
 </style>

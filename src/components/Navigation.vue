@@ -1,6 +1,6 @@
 <template>
   <div>
-    <b-navbar toggleable="lg" type="dark" variant="secondary">
+    <b-navbar toggleable="lg" type="dark" sticky  variant="secondary">
       <b-container>
         <b-navbar-brand to="/">{{ brandTitle }}</b-navbar-brand>
         <b-navbar-toggle target="nav-collapse"> </b-navbar-toggle>
@@ -9,6 +9,7 @@
           <b-navbar-nav>
             <b-nav-item v-for="menu in menus" :to="menu.path" :key="menu.name" active-class="active">
               {{ menu.name }}
+              <b-badge :variant="menu.variant" v-if="onMetric[menu.badge]"> {{ onMetric[menu.badge] }} </b-badge>
             </b-nav-item>
           </b-navbar-nav>
         </b-collapse>
@@ -30,14 +31,19 @@
 <script>
 export default {
   name: "Navigation",
+  computed: {
+    onMetric() {
+      return this.$store.getters.getMetric;
+    }
+  },
   data() {
     return {
       brandTitle: "CAP Dashbaord",
       menus: [
-        { name: "Published", path: "/published" },
-        { name: "Received", path: "/received" },
-        { name: "Subscriber", path: "/subscriber" },
-        { name: "Nodes", path: "/nodes" },
+        { name: "Published", path: "/published", variant: "danger", badge: "publishedFailed" },
+        { name: "Received", path: "/received", variant: "danger", badge: "receivedFailed" },
+        { name: "Subscriber", path: "/subscriber", variant: "info", badge: "subscribers" },
+        { name: "Nodes", path: "/nodes", variant: "light", badge: "servers" },
       ],
     };
   },

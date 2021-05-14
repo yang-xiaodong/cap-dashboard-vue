@@ -5,8 +5,7 @@
         <b-list-group>
           <router-link class="list-group-item text-left list-group-item-secondary list-group-item-action" v-for="menu of subMens" :key="menu.text" active-class="active" :to="menu.name">
             {{ menu.text }}
-            <b-badge :variant="menu.variant" class="float-right" pill> {{ myMertric[menu.num] }}
-            </b-badge>
+            <b-badge :variant="menu.variant" class="float-right" pill> {{ onMetric[menu.num] }} </b-badge>
           </router-link>
         </b-list-group>
       </b-col>
@@ -69,7 +68,8 @@
   </div>
 </template>
 <script>
-import { requestFunc } from "../api/request";
+import axios from "axios";
+
 const formDataTpl = {
   currentPage: 1,
   perPage: 10,
@@ -131,7 +131,7 @@ export default {
     };
   },
   computed: {
-    myMertric() {
+    onMetric() {
       return this.$store.getters.getMetric;
     }
   },
@@ -148,13 +148,9 @@ export default {
   },
   methods: {
     fetchData() {
-      return requestFunc("get", `/cap/published/${this.status}`, {
-        params: { ...this.formData },
-      })((res) => {
-        res.then((data) => {
-          this.items = data.items;
-          this.totals = data.totals;
-        });
+      axios.get(`/published/${this.status}`, { ...this.formData }).then(res => {
+        this.items = res.data.items;
+        this.totals = res.data.totals;
       });
     },
     selectAll(checked) {
@@ -205,11 +201,7 @@ export default {
     },
     requeue: function () {
       const _this = this;
-      requestFunc(
-        "post",
-        "cap/published/requeue",
-        this.selectedItems.map((item) => item.id)
-      )(function () {
+      axios.post('/published/requeue', this.selectedItems.map((item) => item.id)).then(() => {
         _this.clear();
         _this.$bvToast.toast(`Requeue successsful!`, {
           title: "Tips",
@@ -233,12 +225,6 @@ export default {
 </script>
 
 <style scoped>
-.page-line {
-  text-align: left;
-  line-height: 38px;
-  padding-bottom: 9px;
-  border-bottom: 1px solid #eee;
-}
 .pagination {
   flex: 1;
   justify-content: flex-end;
